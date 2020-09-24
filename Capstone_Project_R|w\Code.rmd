@@ -1,0 +1,338 @@
+---
+title: "Iowa Parole and Probation Project"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+if(!require(ggplot2)){install.packages('ggplot2')}
+if(!require(lubridate)){install.packages('lubridate')}
+if(!require(ggthemes)){install.packages('ggthemes')}
+if(!require(dplyr)){install.packages('dplyr')}
+if(!require(caret)){install.packages('caret')}
+if(!require(kknn)){install.packages('kknn')}
+if(!require(nnet)){install.packages('nnet')}
+if(!require(randomForest)){install.packages('randomForest')}
+if(!require(e1071)){install.packages('e1071')}
+if(!require(adabag)){install.packages('adabag')}
+if(!require(gridExtra)){install.packages('grid_Extra')}
+if(!require(outliers)){install.packages('outliers')}
+if(!require(psych)){install.packages('psych')}
+if(!require(stats)){install.packages('stats')}
+
+library(ggplot2)
+library(lubridate)
+library(ggthemes)
+library(dplyr)
+library(caret)
+library(kknn)
+library(nnet)
+library(randomForest)
+library(e1071)
+library(adabag)
+library(gridExtra)
+library(outliers)
+library(psych)
+library(stats)
+
+#Importing needed datasets
+offrel <- read.csv("Offenders_Released_from_Iowa_Prisons.csv")
+prob <- read.csv("3-Year_Recidivism_for_Offenders_Admitted_to_Probation_in_Iowa.csv")
+paro <- read.csv("3-Year_Recidivism_for_Offenders_Released_from_Prison_in_Iowa.csv")
+```
+
+When I was searching for data to use in this final project that will reflect the skills I've gained as a result of this course I knew I wanted to do something crime related.  Over the last few years I have consistently been interested in crime statistics and always seek to gain more insight.  This desire led me to considering prison statistics and I came upon some great data from my home state of Iowa that involved the recidivism rates of parolees and probationers.  This data tracks whether or not someone will re-offend within 3 years after being put on probation or parole.  Using this data I will seek to answer the below questions:
+
+##### 1. Can we predict whether or not a parolee will re-offend within 3 years after release?  
+##### 2. Can we predict whether or not a probationer will re-offend within 3 years after being put on probation?
+
+### Question 1
+Can we predict whether or not a parolee will re-offend within 3 years after release?
+
+One of the first things I noticed about this data was that it contained data not just of offenders released on parole, but also those released for other reasons as displayed.  The first thing I needed to do was add a field we could use later to make sure that we are modeling using only parolee data.
+```{r}
+#All release types
+table(paro$Release.Type)
+
+#Add column denoting if the release was parole or not
+paro$Parole <- ifelse(paro$Release.Type=='Interstate Compact Parole'|paro$Release.Type=='Parole'|paro$Release.Type=='Parole Granted'|
+                        paro$Release.Type=='Paroled to Detainer - INS'|paro$Release.Type=='Paroled to Detainer - Iowa'|paro$Release.Type=='Paroled to Detainer - Out of State'|
+                        paro$Release.Type=='Paroled to Detainer - U.S. Marshall'|paro$Release.Type=='Paroled w/Immediate Discharge','Yes','No')
+```
+
+This data, like most, is not perfect and contains rows where fields are blank.  One such field is the field denoting the sex of the offender.  I demonstrate this by showing the current counts for each sex and in the next line creating a dataset filtering out those blanks and some unnecessary columns. 
+```{r}
+#Showing blank in sex column and fixing it while creating testable dataset in the process
+table(paro$Sex)
+
+parou <- paro %>% select(Sex,Race...Ethnicity,Age.At.Release,Offense.Classification,Offense.Type,Offense.Subtype,Release.Type,Return.to.Prison,Parole) %>% 
+                          filter(Sex=='Male'|Sex=='Female')
+```
+
+As the question asks for predicting recidivism of parolees we will now separate out non-parolee data and create our modeling dataset.
+```{r}
+#Creating a new dataset that contains only parolee data
+paroui <- parou %>% filter(Parole=='Yes')
+
+#Creating our modeling dataset
+paru <- paroui %>% select(Sex,Race...Ethnicity,Age.At.Release,Offense.Classification,Offense.Type,Offense.Subtype,Release.Type,Return.to.Prison)
+
+head(paru)
+```
+
+Next I am going to reflect which variables within this new dataset are going to be the most important in predicting whether or not a parolee will re-offend.  I will be doing this using a random forest model, the variable importance function and will also chart it.
+```{r}
+#Creating model to show variable importance and charting it
+set.seed(2020)
+modeli <- randomForest(Return.to.Prison ~ ., data=paru,family=binomial)
+
+V <- varImp(modeli)
+
+ggplot2::ggplot(V, aes(x=reorder(rownames(V),Overall), y=Overall)) +
+  geom_point( color="blue", size=4, alpha=0.6)+
+  geom_segment( aes(x=rownames(V), xend=rownames(V), y=0, yend=Overall), 
+                color='skyblue') +
+  xlab('Variable')+
+  ylab('Overall Importance')+
+  theme_light() +
+  coord_flip() 
+```
+
+As we can see above the most important variable in making this prediction is the type of release the offender received.  
+
+Next up I will be partitioning the data from our new dataset into training and testing partitions and then making multiple iterations of these partitions to facilitate testing several different models.
+```{r}
+#Partitioning data for testing
+set.seed(2020)
+party <- createDataPartition(paru[,"Return.to.Prison"],times=1,p=0.8,list=FALSE)
+train <- paru[party,]
+test <- paru[-party,]
+
+#Creating Duplicate Partitions
+train1 <- train
+train2 <- train
+train3 <- train
+
+test1 <- test
+test2 <- test 
+test3 <- test
+```
+
+In our model showing variable importance I used a random forest model and it turns out our best attempt to predict whether or not a parolee will re-offend within 3 years was also with a random forest model.  You can see the accuracy achieved below along with a table showing how many good predictions were made vs bad predictions.
+```{r}
+#Random Forest 
+set.seed(2020)
+model1 <- randomForest(Return.to.Prison ~ .,data=train1,family=binomial)
+
+pred1 <- predict(model1,newdata=test1,type='response')
+
+test1$pred <- as.factor(pred1)
+
+test1$score <-ifelse(test1$pred==test1$Return.to.Prison,'good prediction','bad prediction')
+
+cat(paste('Accuracy =',round(mean(pred1==test1$Return.to.Prison),3)))
+
+table(test1$score)
+```
+
+The accuracy of our random forest seems to be able to make our prediction with 64% accuracy, but upon further inspection this may not be a true representation of our accuracy.  In looking over the data I noticed that the vast majority of prediction indicated the parolee would not re-offend by a rather large margin we can see below.
+```{r}
+table(test1$pred)
+```
+
+After making this discovery I decided it would be pertinent to our objective to see how well the model is at accurately predicting that a parolee would re-offend.  To do this I filtered out only the rows in the test data where the parolees did in fact re-offend.  Below is the result of this test.
+```{r}
+test1i <- test1 %>% filter(test1$Return.to.Prison=='Yes')
+
+cat(paste("Accuracy of 'Yes' Predictions  =",round(mean(test1i$pred==test1i$Return.to.Prison),3)))
+
+table(test1i$score)
+```
+
+This test makes it apparent to me that even though our model seems to be very accurate in predicting that a parolee will not re-offend it is only predicts with 21% accuracy that they will.
+
+As a result of all this I am not confident that our model would be able to predict whether or not a parolee will re-offend.  I'm sure the true accuracy of our model lies between the 64% overall accuracy and 21% accuracy that an offender will re-offend.  In order to find out exactly where, more data would be required.  Added fields would also help in improving this accuracy, for example the time a parolee served prior to release, more specific age demographics and/or education levels.
+
+I did test out two other types of models in my attempt to answer this question.  Below I will present the results of my naive Bayes and Neural Net tests along with how well they predicted positive results.
+
+#### naive Bayes
+```{r}
+#naive Bayes
+set.seed(2020)
+model2 <- naiveBayes(Return.to.Prison ~ .,data=train2)
+
+pred2 <- predict(model2,newdata=test2)
+
+test2$pred <- pred2
+
+test2$score <- ifelse(test2$pred==test2$Return.to.Prison,'good prediction','bad prediction')
+
+cat(paste('Accuracy =',round(mean(pred2==test2$Return.to.Prison),3)))
+
+table(test2$score)
+
+test2i <- test2 %>% filter(test2$Return.to.Prison=='Yes')
+
+cat(paste("Accuracy of 'Yes' Predictions  =",round(mean(test2i$pred==test2i$Return.to.Prison),3)))
+
+table(test2i$score)
+```
+
+#### Neural Net
+```{r}
+#Neural Net
+set.seed(2020)
+model3 <- multinom(Return.to.Prison ~ .,data=train3)
+
+pred3 <- predict(model3,newdata=test3)
+
+test3$pred <- pred3
+
+test3$score <- ifelse(test3$pred==test3$Return.to.Prison,'good prediction','bad prediction')
+
+cat(paste('Accuracy =',round(mean(pred3==test3$Return.to.Prison),3)))
+
+table(test3$score)
+
+test3i <- test3 %>% filter(test3$Return.to.Prison=='Yes')
+
+cat(paste("Accuracy of 'Yes' Predictions  =",round(mean(test3i$pred==test3i$Return.to.Prison),3)))
+
+table(test3i$score)
+```
+
+In conclusion, the answer to our question of whether we can predict if a parolee will re-offend or not within 3 years is no.  While our best model has an overall accuracy of 64% I am not confident that this model is good enough at predicting that a parolee will re-offend to say that 64% accuracy is a true accuracy of our model.  
+
+### Question 2
+Can we predict whether or not a probationer will re-offend within 3 years after being put on probation?
+
+While our parole data featured all types of releases from prison, our probation data has the advantage of containing only probationers.  It also features no black rows in the column denoting the sex of the offender.  There is, however, some data manipulation we still need to do.  Specifically our data separates types of recidivism by whether it was a new charge, or a technical violation.  For our purposes we will combine these two types of re-offense and create a new variable simply expressing the whether or not recidivism occurred as a yes or no.  Below you can see how many instances of re-offense happened both before and after the change.
+```{r}
+#Analyzing types of recidivism for probationers
+table(prob$Recidivism.Type)
+
+prob$Recidivist <- as.factor(ifelse(prob$Recidivism.Type=='New Charge','Yes',ifelse(prob$Recidivism.Type=='Technical Violation','Yes','No')))
+
+table(prob$Recidivist)
+```
+
+Next we will create our modeling dataset and then create a model to test variable importance and express that in a chart just like the one we used for our parole tests. 
+```{r}
+#Selecting columns necessary for modeling
+probu <- prob %>% select(Sex,Race...Ethnicity,Offense.Classification,Offense.Type,Offense.Subtype,Supervision.Level,Recidivist)
+
+head(probu)
+
+#Creating model to show variable importance and charting it
+set.seed(2020)
+modelz <- randomForest(Recidivist ~ ., data=probu,family=binomial)
+
+Vz <- varImp(modelz)
+
+ggplot2::ggplot(Vz, aes(x=reorder(rownames(Vz),Overall), y=Overall)) +
+  geom_point( color="blue", size=4, alpha=0.6)+
+  geom_segment( aes(x=rownames(Vz), xend=rownames(Vz), y=0, yend=Overall), 
+                color='skyblue') +
+  xlab('Variable')+
+  ylab('Overall Importance')+
+  theme_light() +
+  coord_flip() 
+```
+
+Now to partition our data and create duplicate testing and training datasets to facilitate testing multiple models. 
+```{r}
+#Partitioning data for testing
+set.seed(2020)
+partyz <- createDataPartition(probu[,"Recidivist"],times=1,p=0.8,list=FALSE)
+trainz <- probu[partyz,]
+testz <- probu[-partyz,]
+
+#Creating Duplicate Partitions
+trainz1 <- trainz
+trainz2 <- trainz
+trainz3 <- trainz
+
+testz1 <- testz
+testz2 <- testz 
+testz3 <- testz
+```
+
+After various models I have found that our best model is a naive Bayes model.  While random forest produced a better overall accuracy I again tested the models accuracy of predicting whether or not a probationer would re-offend again because like our parole data there was a much smaller number of re-offenders than those who did not. This result showed our naive Bayes model was much better at predicting instances of recidivism. 
+
+Here I will present our naive Bayes model and both it's overall accuracy and it's accuracy in predicting positive results. 
+```{r}
+#naive Bayes
+set.seed(2020)
+modelz2 <- naiveBayes(Recidivist ~ .,data=trainz2)
+
+predz2 <- predict(modelz2,newdata=testz2)
+
+testz2$predz <- predz2
+
+testz2$score <- ifelse(testz2$predz==testz2$Recidivist,'good prediction','bad prediction')
+
+cat(paste('Accuracy =',round(mean(predz2==testz2$Recidivist),3)))
+
+table(testz2$score)
+
+testz2i <- testz2 %>% filter(testz2$Recidivist=='Yes')
+
+cat(paste("Accuracy of 'Yes' Predictions  =",round(mean(testz2i$predz==testz2i$Recidivist),3)))
+
+table(testz2i$score)
+```
+
+Here we have very positive results in our naive Bayes model.  With the given data we are able to predict with 86% overall accuracy whether or not an offender will re-offend and 49% accuracy in predicting that a probationer will re-offend.
+
+As with our parole question I performed multiple tests with different model types.  Below are the results of the random forest and neural net tests.
+
+#### Random Forest
+```{r}
+#Random Forest 
+set.seed(2020)
+modelz1 <- randomForest(Recidivist ~ .,data=trainz1,family=binomial)
+
+predz1 <- predict(modelz1,newdata=testz1,type='response')
+
+testz1$predz <- as.factor(predz1)
+
+testz1$score <-ifelse(testz1$predz==testz1$Recidivist,'good prediction','bad prediction')
+
+cat(paste('Accuracy =',round(mean(predz1==testz1$Recidivist),3)))
+
+table(testz1$score)
+
+testz1i <- testz1 %>% filter(testz1$Recidivist=='Yes')
+
+cat(paste("Accuracy of 'Yes' Predictions  =",round(mean(testz1i$predz==testz1i$Recidivist),3)))
+
+table(testz1i$score)
+```
+
+#### Neural Net
+```{r}
+#Neural Net
+set.seed(2020)
+modelz3 <- multinom(Recidivist ~ .,data=trainz3)
+
+predz3 <- predict(modelz3,newdata=testz3)
+
+testz3$predz <- predz3
+
+testz3$score <- ifelse(testz3$predz==testz3$Recidivist,'good prediction','bad prediction')
+
+cat(paste('Accuracy =',round(mean(predz3==testz3$Recidivist),3)))
+
+table(testz3$score)
+
+testz3i <- testz3 %>% filter(testz3$Recidivist=='Yes')
+
+cat(paste("Accuracy of 'Yes' Predictions  =",round(mean(testz3i$predz==testz3i$Recidivist),3)))
+
+table(testz3i$score)
+```
+
+In conclusion, I recognize fully that when predicting something like this plugging an individual offender's data into my model would not be the only tool necessary in making the decision of whether they should go on probation or go to prison.  I am, however, fully confident that our naive Bayes model is a great way to get some objective insight into the chances of recidivism for those making the sentencing decision.
+
+All things considered I would say the answer to our question of whether or not we can predict whether or not a probationer will re-offend is yes.
+

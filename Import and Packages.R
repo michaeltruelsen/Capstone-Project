@@ -32,7 +32,3 @@ library(stats)
 offrel <- read.csv("Offenders_Released_from_Iowa_Prisons.csv")
 prob <- read.csv("3-Year_Recidivism_for_Offenders_Admitted_to_Probation_in_Iowa.csv")
 paro <- read.csv("3-Year_Recidivism_for_Offenders_Released_from_Prison_in_Iowa.csv")
-
-
-
-
