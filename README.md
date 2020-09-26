@@ -4,9 +4,19 @@ In the last several years I have been growing more and more interested in crime 
 
 My goal with this project is to offer some new insights into the decision making that leads to one being placed on probation.  Particularly offering some new tools and presenting some ways of thinking that might not be commonly addressed.  This will be broken into two parts, the first was crafted in R and the second was built in Tableau.  
 
+The data file as it appears in the project files is 3-Year_Recidivism_for_Offenders_Admitted_to_Probation_in_Iowa.csv
+
 ## Part One
 
 My first idea was to tackle something that seemed rather far-fetched when it first crossed my mind as I was taking my first glances at this data.  That idea was to see if I could predict whether or not someone placed on probation would re-offend within 3 years based on the data provided to me.  My goal here was to get a high enough accuracy that my model could potentially be used as a tool when making a decision about whether an offender should be placed on probation.  This (and the project as a whole) is designed to be used in conjunction with the subjective judgement of a court.   
+
+The project files associated with this objective and their purpose are as follows:
+
+Capstone_Project_R_Code.Rmd is the R-Markdown document that when knitted produces the html document found at the below web address.
+
+Import and Packages.R is the R script that loads the packages required for the execution of the remaining R scripts and pulls the data into R.
+
+ProbationPred.R is the R script that contains the coding for the predictive model itself and that code can be found in the knitted R-Markdown file above. 
 
 Within this project's docs folder is the rendered R-Markdown document showing the development of this model and the finished product.  You can view this file at: https://michaeltruelsen.github.io/Capstone-Project/
 
@@ -18,6 +28,14 @@ One of the things I noticed when doing my model in R was that the most important
 
 The second thing I looked into using Tableau that had piqued my interest was what type of crime was most likely to be committed by a probationer both to get them on probation and as the charge in their re-offense.  What I ended up seeing was that the two most common types of crime that fit there parameters were assault and theft.  There were 649 offenders in our data that committed assault to get them on probation and as the crime violating their probation and 445 that committed theft.  After making this discovery my next question was about the types of supervision these offenders were put under and the efficacy of them in preventing re-offense.  By comparing both the data of our 649 assaulters and 445 thieves and their supervision types with the overall instances of assault and theft in our data I was able to see that the most common supervision type for both types of criminals we are analyzing was intensive supervision.  However, we see much higher numbers of other types of supervision, namely high normal and low normal, relative to the intensive cases in our overall data than we do in the recidivist data.  This leads me to believe that while what I've said about this being subjective data I am analyzing objectively, there is certainly truth in saying that the number of offenders who commit assault and theft placed under intensive supervision needs to be reevaluated based on the success of other types of probation.  
 
+The project files associated with this objective and their purpose are as follows:
+
+prob.csv is a slightly altered version of the original data with 2 added fields for use in Tableau.
+
+Wrangling for Tableau.R is the R script that adds the two fields to the prob.csv dataset.
+
+blue-abstract-background-2.jpg is the background used in my Tableau dashboards.
+
 The tableau project can be found and downloaded here: https://public.tableau.com/profile/michael.truelsen#!/
 
 ## Conclusion
@@ -28,3 +46,6 @@ Thank you so much for your time and attention!
 
 I can be reached at michaeltruelsen4@gmail.com with any questions or inquiries. 
 
+## Bibliography
+
+Data was procured from https://data.iowa.gov/Correctional-System/3-Year-Recidivism-for-Offenders-Admitted-to-Probat/e9zy-uibf
