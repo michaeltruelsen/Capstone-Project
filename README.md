@@ -12,13 +12,15 @@ My first idea was to tackle something that seemed rather far-fetched when it fir
 
 The project files associated with this objective and their purpose are as follows:
 
-Capstone_Project_R_Code.Rmd is the R-Markdown document that when knitted produces the html document found at the below web address.
+Capstone_Project_R_Code.Rmd is the R-Markdown document that when knitted produces an html page that contains the R code that built the model along with it's results.
+
+Within the docs folder is index.html which is the html page showing the development of the predictive model without showing the code I used to get there. 
 
 Import and Packages.R is the R script that loads the packages required for the execution of the remaining R scripts and pulls the data into R.
 
 ProbationPred.R is the R script that contains the coding for the predictive model itself and that code can be found in the knitted R-Markdown file above. 
 
-Within this project's docs folder is the rendered R-Markdown document showing the development of this model and the finished product.  You can view this file at: https://michaeltruelsen.github.io/Capstone-Project/
+Within this project's docs folder is the rendered R-Markdown document showing the development of this model and the finished product.  You can view this file at: https://michaeltruelsen.github.io/Capstone-Project/  I have also included a version of this knitted markdown document that contains the code along with the results of it, that html document is called Capstone_Project_R_Code.html and can be found in the project files.
 
 My most successful model was a Naive Bayes model which was able to predict whether or not a probationer would re-offend within 3 years with an accuracy of 86%.  This is better than I had expected I'd be able to do going into this, but again I would like to specify this is designed to possibly serve as a supplemental tool, not as a decision maker.  
 
