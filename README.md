@@ -8,21 +8,23 @@ The data file as it appears in the project files is 3-Year_Recidivism_for_Offend
 
 ## Part One
 
-My first idea was to tackle something that seemed rather far-fetched when it first crossed my mind as I was taking my first glances at this data.  That idea was to see if I could predict whether or not someone placed on probation would re-offend within 3 years based on the data provided to me.  My goal here was to get a high enough accuracy that my model could potentially be used as a tool when making a decision about whether an offender should be placed on probation.  This (and the project as a whole) is designed to be used in conjunction with the subjective judgement of a court.   
+My first idea was to tackle something that seemed rather far-fetched when it first crossed my mind as I was taking my first glances at this data.  That idea was to see if I could predict whether or not someone placed on probation would re-offend within 3 years based on the data provided to me.  My goal here was to get a high enough accuracy that my model could potentially be used as a tool when making a decision about whether an offender should be placed on probation.  This (and the project as a whole) is designed to be used in conjunction with the subjective judgement of a court. 
+
+Within this project's docs folder is the rendered R-Markdown document showing the development of this model and the finished product.  You can view this file at: https://michaeltruelsen.github.io/Capstone-Project/  I have also included a version of this knitted markdown document that contains the code along with the results of it, that html document is called Capstone_Project_R_Code.html and can be found in the project files.
+
+My most successful model was a Naive Bayes model which was able to predict whether or not a probationer would re-offend within 3 years with an accuracy of 86%.  This is better than I had expected I'd be able to do going into this, but again I would like to specify this is designed to possibly serve as a supplemental tool, not as a decision maker.    
 
 The project files associated with this objective and their purpose are as follows:
 
 Capstone_Project_R_Code.Rmd is the R-Markdown document that when knitted produces an html page that contains the R code that built the model along with it's results.
+
+Capstone_Project_R.Rmd is the R-Markdown document that when knitted produces the index.html file found at the link above.
 
 Within the docs folder is index.html which is the html page showing the development of the predictive model without showing the code I used to get there. 
 
 Import and Packages.R is the R script that loads the packages required for the execution of the remaining R scripts and pulls the data into R.
 
 ProbationPred.R is the R script that contains the coding for the predictive model itself and that code can be found in the knitted R-Markdown file above. 
-
-Within this project's docs folder is the rendered R-Markdown document showing the development of this model and the finished product.  You can view this file at: https://michaeltruelsen.github.io/Capstone-Project/  I have also included a version of this knitted markdown document that contains the code along with the results of it, that html document is called Capstone_Project_R_Code.html and can be found in the project files.
-
-My most successful model was a Naive Bayes model which was able to predict whether or not a probationer would re-offend within 3 years with an accuracy of 86%.  This is better than I had expected I'd be able to do going into this, but again I would like to specify this is designed to possibly serve as a supplemental tool, not as a decision maker.  
 
 ## Part Two 
 
