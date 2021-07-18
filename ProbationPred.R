@@ -48,11 +48,7 @@ predz1 <- predict(modelz1,newdata=testz1,type='response')
 
 testz1$predz <- as.factor(predz1)
 
-testz1$score <-ifelse(testz1$predz==testz1$Recidivist,'good prediction','bad prediction')
-
-cat(paste('Accuracy =',round(mean(predz1==testz1$Recidivist),3)))
-
-table(testz1$score)
+confusionMatrix(testz1$Recidivist,testz1$predz)
 
 #Naive Bayes
 set.seed(2020)
@@ -62,11 +58,7 @@ predz2 <- predict(modelz2,newdata=testz2)
 
 testz2$predz <- predz2
 
-testz2$score <- ifelse(testz2$predz==testz2$Recidivist,'good prediction','bad prediction')
-
-cat(paste('Accuracy =',round(mean(predz2==testz2$Recidivist),3)))
-
-table(testz2$score)
+confusionMatrix(testz2$Recidivist,testz2$predz)
 
 #Neural Net
 set.seed(2020)
@@ -76,32 +68,4 @@ predz3 <- predict(modelz3,newdata=testz3)
 
 testz3$predz <- predz3
 
-testz3$score <- ifelse(testz3$predz==testz3$Recidivist,'good prediction','bad prediction')
-
-cat(paste('Accuracy =',round(mean(predz3==testz3$Recidivist),3)))
-
-table(testz3$score)
-
-#Performance tests
-#Random Forest
-testz1i <- testz1 %>% filter(testz1$Recidivist=='Yes')
-
-cat(paste("Accuracy of 'Yes' Predictions  =",round(mean(testz1i$predz==testz1i$Recidivist),3)))
-
-table(testz1i$score)
-
-#Naive Bayes
-testz2i <- testz2 %>% filter(testz2$Recidivist=='Yes')
-
-cat(paste("Accuracy of 'Yes' Predictions  =",round(mean(testz2i$predz==testz2i$Recidivist),3)))
-
-table(testz2i$score)
-
-#Neural Net
-testz3i <- testz3 %>% filter(testz3$Recidivist=='Yes')
-
-cat(paste("Accuracy of 'Yes' Predictions  =",round(mean(testz3i$predz==testz3i$Recidivist),3)))
-
-table(testz3i$score)
-
-table(prob$Race...Ethnicity)
+confusionMatrix(testz3$Recidivist,testz3$predz)

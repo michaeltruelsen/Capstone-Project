@@ -92,7 +92,7 @@ testz2 <- testz
 testz3 <- testz
 ```
 
-After various models I have found that our best model is a naive Bayes model.  While random forest produced a better overall accuracy I noticed that the vast majority of cases in our data did not involve recidivism and figured I needed to not only check our model's overall accuracy but also check its accuracy when predicting that a probationer would re-offend.  Our naive Bayes model fuctioned the best when taking into account both of these acccuracies. 
+After various models I have found that our best model is a naive Bayes model.  While our random forest and neural net models produced a better overall accuracy I noticed that the vast majority of cases in our data did not involve recidivism and figured I needed to not only take into account our model's overall accuracy but also its accuracy when predicting that a probationer would re-offend.  Our naive Bayes model functioned the best when taking into account both of these accuracy metrics. 
 
 Here I will present our naive Bayes model and both it's overall accuracy and it's accuracy in predicting positive results. 
 ```{r}
@@ -104,20 +104,10 @@ predz2 <- predict(modelz2,newdata=testz2)
 
 testz2$predz <- predz2
 
-testz2$score <- ifelse(testz2$predz==testz2$Recidivist,'good prediction','bad prediction')
-
-cat(paste('Accuracy =',round(mean(predz2==testz2$Recidivist),3)))
-
-table(testz2$score)
-
-testz2i <- testz2 %>% filter(testz2$Recidivist=='Yes')
-
-cat(paste("Accuracy of 'Yes' Predictions  =",round(mean(testz2i$predz==testz2i$Recidivist),3)))
-
-table(testz2i$score)
+confusionMatrix(testz2$Recidivist,testz2$predz)
 ```
 
-Here we have very positive results in our naive Bayes model.  With the given data we are able to predict with 86% overall accuracy whether or not an offender will re-offend and 49% accuracy in predicting that a probationer will re-offend.
+Here we have very positive results in our naive Bayes model.  With the given data we are able to predict re-offense with an accuracy of 86%.  Our confusion matrix also tells us that 93.2% of our re-offenders were correctly classified as such.  Given our objective and the nature of our test I think this metric is worth noting.
 
 The other two models I ran were random forest and neural net models.  They did not function as well as our naive Bayes model, but I have included their performances below.  
 
@@ -131,17 +121,7 @@ predz1 <- predict(modelz1,newdata=testz1,type='response')
 
 testz1$predz <- as.factor(predz1)
 
-testz1$score <-ifelse(testz1$predz==testz1$Recidivist,'good prediction','bad prediction')
-
-cat(paste('Accuracy =',round(mean(predz1==testz1$Recidivist),3)))
-
-table(testz1$score)
-
-testz1i <- testz1 %>% filter(testz1$Recidivist=='Yes')
-
-cat(paste("Accuracy of 'Yes' Predictions  =",round(mean(testz1i$predz==testz1i$Recidivist),3)))
-
-table(testz1i$score)
+confusionMatrix(testz1$Recidivist,testz1$predz)
 ```
 
 #### Neural Net
@@ -154,17 +134,7 @@ predz3 <- predict(modelz3,newdata=testz3)
 
 testz3$predz <- predz3
 
-testz3$score <- ifelse(testz3$predz==testz3$Recidivist,'good prediction','bad prediction')
-
-cat(paste('Accuracy =',round(mean(predz3==testz3$Recidivist),3)))
-
-table(testz3$score)
-
-testz3i <- testz3 %>% filter(testz3$Recidivist=='Yes')
-
-cat(paste("Accuracy of 'Yes' Predictions  =",round(mean(testz3i$predz==testz3i$Recidivist),3)))
-
-table(testz3i$score)
+confusionMatrix(testz3$Recidivist,testz3$predz)45
 ```
 
 In conclusion, I recognize fully that when predicting something like this plugging an individual offender's data into my model would not be the only tool necessary in making the decision of whether they should go on probation or go to prison.  I am, however, fully confident that our naive Bayes model is a great way to get some objective insight into the chances of recidivism for those making the sentencing decision.
